@@ -450,14 +450,6 @@
       </form>
     </section>
 
-    <section aria-label="記録一覧">
-      <div class="list-head">
-        <h2>記録一覧</h2>
-        <span class="count" id="recordCount">0件</span>
-      </div>
-      <div class="record-list" id="recordList"></div>
-    </section>
-
     <section class="backup-card" aria-label="バックアップ">
       <div class="backup-head">
         <h2>バックアップ</h2>
@@ -471,6 +463,14 @@
         </label>
       </div>
       <p class="backup-status" id="backupStatus" aria-live="polite"></p>
+    </section>
+
+    <section aria-label="記録一覧">
+      <div class="list-head">
+        <h2>記録一覧</h2>
+        <span class="count" id="recordCount">0件</span>
+      </div>
+      <div class="record-list" id="recordList"></div>
     </section>
   </main>
 
@@ -592,7 +592,7 @@
       if (records.length === 0) {
         const empty = document.createElement("p");
         empty.className = "empty";
-        empty.textContent = "まだ記録はありません。食べられた日も、食べられない日も、そのまま残せます。";
+        empty.textContent = "まだ記録はありません。";
         recordList.appendChild(empty);
         return;
       }
