@@ -1,4 +1,4 @@
-const CACHE_NAME = "appetite-memo-cache-v1";
+const CACHE_NAME = "appetite-memo-cache-v2";
 const CACHE_FILES = [
   "./",
   "./index.html",
