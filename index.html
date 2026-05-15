@@ -440,8 +440,18 @@
           </div>
         </div>
 
+        <div class="meal-card" data-meal="snack">
+          <div class="meal-title">間食 <span>未選択でも保存できます</span></div>
+          <div class="choice-grid" role="group" aria-label="間食の食欲">
+            <button type="button" class="choice-button" data-value="食べれない">食べれない</button>
+            <button type="button" class="choice-button" data-value="少し">少し</button>
+            <button type="button" class="choice-button" data-value="まあまあ">まあまあ</button>
+            <button type="button" class="choice-button" data-value="ガッツリ">ガッツリ</button>
+          </div>
+        </div>
+
         <div class="field">
-          <label for="memo">メモ <span aria-hidden="true">任意</span></label>
+          <label for="memo">メモ（任意）</label>
           <textarea id="memo" name="memo" placeholder="体調や気づいたことを、書ける範囲で"></textarea>
         </div>
 
@@ -477,17 +487,19 @@
   <script>
     const STORAGE_KEY = "appetite_memo_v1";
     const APP_NAME = "食欲メモ";
-    const mealKeys = ["morning", "lunch", "night"];
+    const mealKeys = ["morning", "lunch", "night", "snack"];
     const mealLabels = {
       morning: "朝",
       lunch: "昼",
-      night: "夜"
+      night: "夜",
+      snack: "間食"
     };
     const validAppetites = ["食べれない", "少し", "まあまあ", "ガッツリ"];
     const state = {
       morning: "",
       lunch: "",
-      night: ""
+      night: "",
+      snack: ""
     };
 
     const form = document.getElementById("memoForm");
@@ -548,6 +560,7 @@
         morning: normalizeAppetite(record.morning),
         lunch: normalizeAppetite(record.lunch),
         night: normalizeAppetite(record.night),
+        snack: normalizeAppetite(record.snack),
         memo: typeof record.memo === "string" ? record.memo : ""
       };
     }
@@ -682,6 +695,7 @@
         morning: state.morning,
         lunch: state.lunch,
         night: state.night,
+        snack: state.snack,
         memo: memoInput.value.trim()
       });
 
