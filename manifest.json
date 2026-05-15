@@ -1,0 +1,12 @@
+{
+  "name": "食欲メモ",
+  "short_name": "食欲メモ",
+  "description": "朝・昼・夜の食欲を、4つの中から選んで記録します。食べられない日も、そのまま残して大丈夫です。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff9ee",
+  "theme_color": "#f4dfbd",
+  "lang": "ja",
+  "orientation": "portrait-primary"
+}

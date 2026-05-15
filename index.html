@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4dfbd">
+  <meta name="description" content="朝・昼・夜の食欲を、4つの中から選んで記録します。食べられない日も、そのまま残して大丈夫です。">
+  <link rel="manifest" href="./manifest.json">
+  <title>食欲メモ</title>
+  <style>
+    :root {
+      --bg: #fff9ee;
+      --panel: #fffef9;
+      --panel-soft: #fff5e4;
+      --text: #43372c;
+      --muted: #786c60;
+      --line: #ead9c2;
+      --accent: #d98a4a;
+      --accent-deep: #a65f2b;
+      --accent-soft: #ffe3c7;
+      --green: #6e8b59;
+      --danger: #b86558;
+      --shadow: 0 14px 34px rgba(116, 84, 52, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+      line-height: 1.6;
+      letter-spacing: 0;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 18px 14px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    button,
+    textarea,
+    input {
+      box-sizing: border-box;
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+      min-width: 0;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+
+    .hero {
+      padding: 18px 4px 14px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 8vw, 40px);
+      line-height: 1.2;
+      font-weight: 800;
+      color: #3e3025;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .card,
+    form,
+    .meal-card,
+    .record-card,
+    .backup-card {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .card,
+    .backup-card {
+      background: var(--panel);
+      border: 1px solid rgba(234, 217, 194, 0.92);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 14px 0;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label,
+    .section-label {
+      display: block;
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #493a2e;
+    }
+
+    .input-wrap {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      display: block;
+      font-size: 16px;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      text-align: left;
+      color: var(--text);
+      background: #fffdfa;
+      outline: none;
+    }
+
+    input[type="date"]:focus,
+    textarea:focus {
+      border-color: #d9965f;
+      box-shadow: 0 0 0 4px rgba(217, 138, 74, 0.16);
+    }
+
+    .meal-card {
+      background: var(--panel-soft);
+      border: 1px solid rgba(234, 217, 194, 0.86);
+      border-radius: 16px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .meal-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-weight: 800;
+      color: #4a3b2f;
+    }
+
+    .meal-title span {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-button {
+      min-height: 48px;
+      padding: 10px 8px;
+      border: 1px solid #ead6bc;
+      border-radius: 14px;
+      background: #fffdfa;
+      color: #4a3b31;
+      font-weight: 800;
+      text-align: center;
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .choice-button:active,
+    .primary-button:active,
+    .secondary-button:active,
+    .delete-button:active {
+      transform: translateY(1px);
+    }
+
+    .choice-button.is-selected {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #633916;
+      box-shadow: 0 0 0 3px rgba(217, 138, 74, 0.16) inset;
+    }
+
+    .choice-button[data-value="食べれない"].is-selected {
+      background: #f8eadf;
+      border-color: #d2a18f;
+      color: #6f4b42;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 104px;
+      resize: vertical;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      background: #fffdfa;
+      outline: none;
+    }
+
+    .primary-button {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      box-shadow: 0 12px 22px rgba(166, 95, 43, 0.18);
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 10px 0 0;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .list-head,
+    .backup-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 24px 0 10px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+      font-weight: 800;
+      color: #43352a;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .empty {
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed #ddc8ad;
+      border-radius: 16px;
+      background: rgba(255, 254, 249, 0.72);
+      color: var(--muted);
+    }
+
+    .record-list {
+      display: grid;
+      gap: 12px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .record-card {
+      background: #fffefa;
+      border: 1px solid rgba(234, 217, 194, 0.95);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 10px 26px rgba(116, 84, 52, 0.08);
+    }
+
+    .record-date {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #3f3126;
+    }
+
+    .record-lines {
+      display: grid;
+      gap: 4px;
+      margin: 0 0 12px;
+      color: #56483d;
+      font-size: 15px;
+    }
+
+    .record-lines p {
+      margin: 0;
+    }
+
+    .delete-button {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 14px;
+      background: #fff2ed;
+      color: var(--danger);
+      font-weight: 800;
+      border: 1px solid #efcabe;
+    }
+
+    .backup-card {
+      margin-bottom: 0;
+    }
+
+    .backup-text {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .backup-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .secondary-button,
+    .file-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 48px;
+      border-radius: 15px;
+      border: 1px solid #dfc6a7;
+      background: #fff8ec;
+      color: var(--accent-deep);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .file-label input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .backup-status {
+      min-height: 22px;
+      margin: 10px 0 0;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    @media (min-width: 560px) {
+      body {
+        padding: 28px 20px 40px;
+      }
+
+      .card,
+      .backup-card {
+        padding: 20px;
+      }
+
+      .choice-grid,
+      .backup-actions {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .backup-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <header class="hero">
+      <h1>食欲メモ</h1>
+      <p class="lead">朝・昼・夜の食欲を、4つの中から選んで記録します。食べられない日も、そのまま残して大丈夫です。</p>
+    </header>
+
+    <section class="card" aria-label="食欲の記録フォーム">
+      <form id="memoForm">
+        <div class="field">
+          <label for="recordDate">日付</label>
+          <div class="input-wrap">
+            <input type="date" id="recordDate" name="date">
+          </div>
+        </div>
+
+        <div class="meal-card" data-meal="morning">
+          <div class="meal-title">朝 <span>未選択でも保存できます</span></div>
+          <div class="choice-grid" role="group" aria-label="朝の食欲">
+            <button type="button" class="choice-button" data-value="食べれない">食べれない</button>
+            <button type="button" class="choice-button" data-value="少し">少し</button>
+            <button type="button" class="choice-button" data-value="まあまあ">まあまあ</button>
+            <button type="button" class="choice-button" data-value="ガッツリ">ガッツリ</button>
+          </div>
+        </div>
+
+        <div class="meal-card" data-meal="lunch">
+          <div class="meal-title">昼 <span>未選択でも保存できます</span></div>
+          <div class="choice-grid" role="group" aria-label="昼の食欲">
+            <button type="button" class="choice-button" data-value="食べれない">食べれない</button>
+            <button type="button" class="choice-button" data-value="少し">少し</button>
+            <button type="button" class="choice-button" data-value="まあまあ">まあまあ</button>
+            <button type="button" class="choice-button" data-value="ガッツリ">ガッツリ</button>
+          </div>
+        </div>
+
+        <div class="meal-card" data-meal="night">
+          <div class="meal-title">夜 <span>未選択でも保存できます</span></div>
+          <div class="choice-grid" role="group" aria-label="夜の食欲">
+            <button type="button" class="choice-button" data-value="食べれない">食べれない</button>
+            <button type="button" class="choice-button" data-value="少し">少し</button>
+            <button type="button" class="choice-button" data-value="まあまあ">まあまあ</button>
+            <button type="button" class="choice-button" data-value="ガッツリ">ガッツリ</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="memo">メモ <span aria-hidden="true">任意</span></label>
+          <textarea id="memo" name="memo" placeholder="体調や気づいたことを、書ける範囲で"></textarea>
+        </div>
+
+        <button type="submit" class="primary-button">保存する</button>
+        <p class="status" id="saveStatus" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section aria-label="記録一覧">
+      <div class="list-head">
+        <h2>記録一覧</h2>
+        <span class="count" id="recordCount">0件</span>
+      </div>
+      <div class="record-list" id="recordList"></div>
+    </section>
+
+    <section class="backup-card" aria-label="バックアップ">
+      <div class="backup-head">
+        <h2>バックアップ</h2>
+      </div>
+      <p class="backup-text">大切な記録がなくならないように、定期的なバックアップをお願いします。</p>
+      <div class="backup-actions">
+        <button type="button" class="secondary-button" id="exportButton">JSONでエクスポート</button>
+        <label class="file-label" for="importFile">
+          JSONをインポート
+          <input type="file" id="importFile" accept="application/json,.json">
+        </label>
+      </div>
+      <p class="backup-status" id="backupStatus" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "appetite_memo_v1";
+    const APP_NAME = "食欲メモ";
+    const mealKeys = ["morning", "lunch", "night"];
+    const mealLabels = {
+      morning: "朝",
+      lunch: "昼",
+      night: "夜"
+    };
+    const validAppetites = ["食べれない", "少し", "まあまあ", "ガッツリ"];
+    const state = {
+      morning: "",
+      lunch: "",
+      night: ""
+    };
+
+    const form = document.getElementById("memoForm");
+    const dateInput = document.getElementById("recordDate");
+    const memoInput = document.getElementById("memo");
+    const saveStatus = document.getElementById("saveStatus");
+    const recordList = document.getElementById("recordList");
+    const recordCount = document.getElementById("recordCount");
+    const exportButton = document.getElementById("exportButton");
+    const importFile = document.getElementById("importFile");
+    const backupStatus = document.getElementById("backupStatus");
+
+    function todayString() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return [];
+        }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return [];
+        }
+        return parsed.filter(isRecordLike).map(normalizeRecord);
+      } catch (error) {
+        console.warn("記録の読み込みに失敗しました", error);
+        return [];
+      }
+    }
+
+    function saveRecords(records) {
+      const cleaned = records.filter(isRecordLike).map(normalizeRecord);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+    }
+
+    function isDateString(value) {
+      return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+    }
+
+    function normalizeAppetite(value) {
+      return validAppetites.includes(value) ? value : "";
+    }
+
+    function isRecordLike(record) {
+      return record && typeof record === "object" && isDateString(record.date);
+    }
+
+    function normalizeRecord(record) {
+      return {
+        date: record.date,
+        morning: normalizeAppetite(record.morning),
+        lunch: normalizeAppetite(record.lunch),
+        night: normalizeAppetite(record.night),
+        memo: typeof record.memo === "string" ? record.memo : ""
+      };
+    }
+
+    function sortedRecords(records) {
+      return [...records].sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function getDisplayValue(value) {
+      return value || "未記録";
+    }
+
+    function setStatus(element, message) {
+      element.textContent = message;
+      if (!message) {
+        return;
+      }
+      window.clearTimeout(element.dataset.timer);
+      const timer = window.setTimeout(() => {
+        element.textContent = "";
+      }, 2600);
+      element.dataset.timer = String(timer);
+    }
+
+    function resetForm() {
+      dateInput.value = todayString();
+      memoInput.value = "";
+      mealKeys.forEach((meal) => {
+        state[meal] = "";
+      });
+      document.querySelectorAll(".choice-button").forEach((button) => {
+        button.classList.remove("is-selected");
+        button.setAttribute("aria-pressed", "false");
+      });
+    }
+
+    function renderRecords() {
+      const records = sortedRecords(loadRecords());
+      recordCount.textContent = `${records.length}件`;
+      recordList.innerHTML = "";
+
+      if (records.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "まだ記録はありません。食べられた日も、食べられない日も、そのまま残せます。";
+        recordList.appendChild(empty);
+        return;
+      }
+
+      records.forEach((record) => {
+        const card = document.createElement("article");
+        card.className = "record-card";
+
+        const date = document.createElement("p");
+        date.className = "record-date";
+        date.textContent = record.date;
+        card.appendChild(date);
+
+        const lines = document.createElement("div");
+        lines.className = "record-lines";
+        mealKeys.forEach((meal) => {
+          const line = document.createElement("p");
+          line.textContent = `${mealLabels[meal]}：${getDisplayValue(record[meal])}`;
+          lines.appendChild(line);
+        });
+
+        if (record.memo.trim()) {
+          const memo = document.createElement("p");
+          memo.textContent = `メモ：${record.memo.trim()}`;
+          lines.appendChild(memo);
+        }
+        card.appendChild(lines);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete-button";
+        deleteButton.textContent = "削除する";
+        deleteButton.addEventListener("click", () => deleteRecord(record.date));
+        card.appendChild(deleteButton);
+
+        recordList.appendChild(card);
+      });
+    }
+
+    function deleteRecord(date) {
+      const ok = window.confirm(`${date} の記録を削除しますか？`);
+      if (!ok) {
+        return;
+      }
+      const records = loadRecords().filter((record) => record.date !== date);
+      saveRecords(records);
+      renderRecords();
+      setStatus(saveStatus, "削除しました");
+    }
+
+    function upsertRecord(newRecord) {
+      const records = loadRecords();
+      const exists = records.some((record) => record.date === newRecord.date);
+      if (exists) {
+        const ok = window.confirm(`${newRecord.date} の記録を上書きしますか？`);
+        if (!ok) {
+          return false;
+        }
+      }
+      const merged = records.filter((record) => record.date !== newRecord.date);
+      merged.push(newRecord);
+      saveRecords(merged);
+      return true;
+    }
+
+    document.querySelectorAll(".meal-card").forEach((mealCard) => {
+      const meal = mealCard.dataset.meal;
+      mealCard.querySelectorAll(".choice-button").forEach((button) => {
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", () => {
+          const selected = state[meal] === button.dataset.value ? "" : button.dataset.value;
+          state[meal] = selected;
+          mealCard.querySelectorAll(".choice-button").forEach((item) => {
+            const isSelected = item.dataset.value === selected;
+            item.classList.toggle("is-selected", isSelected);
+            item.setAttribute("aria-pressed", String(isSelected));
+          });
+        });
+      });
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const date = dateInput.value || todayString();
+      const record = normalizeRecord({
+        date,
+        morning: state.morning,
+        lunch: state.lunch,
+        night: state.night,
+        memo: memoInput.value.trim()
+      });
+
+      const saved = upsertRecord(record);
+      if (!saved) {
+        return;
+      }
+
+      renderRecords();
+      resetForm();
+      setStatus(saveStatus, "保存しました");
+    });
+
+    exportButton.addEventListener("click", () => {
+      const records = sortedRecords(loadRecords());
+      const payload = {
+        app: APP_NAME,
+        storageKey: STORAGE_KEY,
+        exportedAt: new Date().toISOString(),
+        records
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `appetite-memo-backup-${todayString()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setStatus(backupStatus, "エクスポートしました");
+    });
+
+    importFile.addEventListener("change", () => {
+      const file = importFile.files && importFile.files[0];
+      if (!file) {
+        return;
+      }
+
+      const ok = window.confirm("JSONファイルをインポートしますか？同じ日付の記録はインポートした内容で上書きされます。");
+      if (!ok) {
+        importFile.value = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || ""));
+          const imported = Array.isArray(parsed) ? parsed : parsed.records;
+          if (!Array.isArray(imported)) {
+            throw new Error("records が見つかりません");
+          }
+
+          const normalized = imported.filter(isRecordLike).map(normalizeRecord);
+          if (normalized.length === 0) {
+            setStatus(backupStatus, "取り込める記録がありませんでした");
+            return;
+          }
+
+          const map = new Map();
+          loadRecords().forEach((record) => {
+            map.set(record.date, normalizeRecord(record));
+          });
+          normalized.forEach((record) => {
+            map.set(record.date, record);
+          });
+
+          saveRecords(Array.from(map.values()));
+          renderRecords();
+          setStatus(backupStatus, `${normalized.length}件インポートしました`);
+        } catch (error) {
+          console.warn("インポートに失敗しました", error);
+          setStatus(backupStatus, "インポートに失敗しました");
+        } finally {
+          importFile.value = "";
+        }
+      });
+      reader.readAsText(file);
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((error) => {
+          console.warn("Service Worker の登録に失敗しました", error);
+        });
+      });
+    }
+
+    resetForm();
+    renderRecords();
+  </script>
+</body>
+</html>
