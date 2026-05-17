@@ -60,6 +60,10 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     .app {
       width: 100%;
       max-width: 720px;
@@ -197,6 +201,8 @@
     .choice-button:active,
     .primary-button:active,
     .secondary-button:active,
+    .cancel-edit-button:active,
+    .edit-button:active,
     .delete-button:active {
       transform: translateY(1px);
     }
@@ -237,6 +243,22 @@
       font-size: 17px;
       font-weight: 800;
       box-shadow: 0 12px 22px rgba(166, 95, 43, 0.18);
+    }
+
+    .form-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .cancel-edit-button {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 15px;
+      border: 1px solid #dfc6a7;
+      background: #fff8ec;
+      color: var(--accent-deep);
+      font-weight: 800;
+      text-align: center;
     }
 
     .status {
@@ -316,13 +338,30 @@
       margin: 0;
     }
 
+    .record-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .edit-button,
     .delete-button {
       width: 100%;
       min-height: 44px;
       border-radius: 14px;
+      font-weight: 800;
+    }
+
+    .edit-button {
+      background: #edf6e8;
+      color: #527443;
+      border: 1px solid #cbdcbe;
+    }
+
+    .delete-button {
       background: #fff2ed;
       color: var(--danger);
-      font-weight: 800;
       border: 1px solid #efcabe;
     }
 
@@ -398,10 +437,10 @@
   <main class="app" id="app">
     <header class="hero">
       <h1>食欲メモ</h1>
-      <p class="lead">朝・昼・夜の食欲を、4つの中から選んで記録します。食べられない日も、そのまま残して大丈夫です。</p>
+      <p class="lead">朝・昼・夜などの食欲を、4つの中から選んで記録できます。</p>
     </header>
 
-    <section class="card" aria-label="食欲の記録フォーム">
+    <section class="card" id="formCard" aria-label="食欲の記録フォーム">
       <form id="memoForm">
         <div class="field">
           <label for="recordDate">日付</label>
@@ -455,7 +494,10 @@
           <textarea id="memo" name="memo" placeholder="体調や気づいたことを、書ける範囲で"></textarea>
         </div>
 
-        <button type="submit" class="primary-button">保存する</button>
+        <div class="form-actions">
+          <button type="submit" class="primary-button" id="saveButton">保存する</button>
+          <button type="button" class="cancel-edit-button" id="cancelEditButton" hidden>編集をやめる</button>
+        </div>
         <p class="status" id="saveStatus" aria-live="polite"></p>
       </form>
     </section>
@@ -503,14 +545,18 @@
     };
 
     const form = document.getElementById("memoForm");
+    const formCard = document.getElementById("formCard");
     const dateInput = document.getElementById("recordDate");
     const memoInput = document.getElementById("memo");
+    const saveButton = document.getElementById("saveButton");
+    const cancelEditButton = document.getElementById("cancelEditButton");
     const saveStatus = document.getElementById("saveStatus");
     const recordList = document.getElementById("recordList");
     const recordCount = document.getElementById("recordCount");
     const exportButton = document.getElementById("exportButton");
     const importFile = document.getElementById("importFile");
     const backupStatus = document.getElementById("backupStatus");
+    let editingDate = "";
 
     function todayString() {
       const now = new Date();
@@ -585,16 +631,38 @@
       element.dataset.timer = String(timer);
     }
 
+    function updateMealButtons(meal) {
+      const mealCard = document.querySelector(`.meal-card[data-meal="${meal}"]`);
+      if (!mealCard) {
+        return;
+      }
+      mealCard.querySelectorAll(".choice-button").forEach((item) => {
+        const isSelected = item.dataset.value === state[meal];
+        item.classList.toggle("is-selected", isSelected);
+        item.setAttribute("aria-pressed", String(isSelected));
+      });
+    }
+
+    function setFormRecord(record) {
+      const normalized = normalizeRecord(record);
+      dateInput.value = normalized.date;
+      memoInput.value = normalized.memo;
+      mealKeys.forEach((meal) => {
+        state[meal] = normalized[meal];
+        updateMealButtons(meal);
+      });
+    }
+
     function resetForm() {
       dateInput.value = todayString();
       memoInput.value = "";
       mealKeys.forEach((meal) => {
         state[meal] = "";
+        updateMealButtons(meal);
       });
-      document.querySelectorAll(".choice-button").forEach((button) => {
-        button.classList.remove("is-selected");
-        button.setAttribute("aria-pressed", "false");
-      });
+      editingDate = "";
+      saveButton.textContent = "保存する";
+      cancelEditButton.hidden = true;
     }
 
     function renderRecords() {
@@ -634,15 +702,40 @@
         }
         card.appendChild(lines);
 
+        const actions = document.createElement("div");
+        actions.className = "record-actions";
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "edit-button";
+        editButton.textContent = "編集";
+        editButton.addEventListener("click", () => editRecord(record.date));
+        actions.appendChild(editButton);
+
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
         deleteButton.className = "delete-button";
-        deleteButton.textContent = "削除する";
+        deleteButton.textContent = "削除";
         deleteButton.addEventListener("click", () => deleteRecord(record.date));
-        card.appendChild(deleteButton);
+        actions.appendChild(deleteButton);
+
+        card.appendChild(actions);
 
         recordList.appendChild(card);
       });
+    }
+
+    function editRecord(date) {
+      const record = loadRecords().find((item) => item.date === date);
+      if (!record) {
+        return;
+      }
+      editingDate = date;
+      setFormRecord(record);
+      saveButton.textContent = "更新する";
+      cancelEditButton.hidden = false;
+      setStatus(saveStatus, "");
+      formCard.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function deleteRecord(date) {
@@ -656,16 +749,18 @@
       setStatus(saveStatus, "削除しました");
     }
 
-    function upsertRecord(newRecord) {
+    function upsertRecord(newRecord, originalDate = "") {
       const records = loadRecords();
       const exists = records.some((record) => record.date === newRecord.date);
-      if (exists) {
+      if (exists && newRecord.date !== originalDate) {
         const ok = window.confirm(`${newRecord.date} の記録を上書きしますか？`);
         if (!ok) {
           return false;
         }
       }
-      const merged = records.filter((record) => record.date !== newRecord.date);
+      const merged = records.filter((record) => {
+        return record.date !== newRecord.date && record.date !== originalDate;
+      });
       merged.push(newRecord);
       saveRecords(merged);
       return true;
@@ -687,8 +782,14 @@
       });
     });
 
+    cancelEditButton.addEventListener("click", () => {
+      resetForm();
+      setStatus(saveStatus, "");
+    });
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      const originalDate = editingDate;
       const date = dateInput.value || todayString();
       const record = normalizeRecord({
         date,
@@ -699,14 +800,14 @@
         memo: memoInput.value.trim()
       });
 
-      const saved = upsertRecord(record);
+      const saved = upsertRecord(record, originalDate);
       if (!saved) {
         return;
       }
 
       renderRecords();
       resetForm();
-      setStatus(saveStatus, "保存しました");
+      setStatus(saveStatus, originalDate ? "更新しました" : "保存しました");
     });
 
     exportButton.addEventListener("click", () => {
