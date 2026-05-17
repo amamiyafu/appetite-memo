@@ -1,8 +1,9 @@
-const CACHE_NAME = "appetite-memo-cache-v3";
+const CACHE_NAME = "appetite-memo-cache-v4";
 const CACHE_FILES = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./icon.png",
   "./sw.js"
 ];
 

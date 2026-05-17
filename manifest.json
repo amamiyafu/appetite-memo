@@ -7,6 +7,14 @@
   "display": "standalone",
   "background_color": "#fff9ee",
   "theme_color": "#f4dfbd",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
   "lang": "ja",
   "orientation": "portrait-primary"
 }
