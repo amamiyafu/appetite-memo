@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8">
@@ -503,15 +503,15 @@
       </form>
     </section>
 
-    <section class="backup-card" aria-label="バックアップ">
+    <section class="backup-card" aria-label="保存と復元">
       <div class="backup-head">
-        <h2>バックアップ</h2>
+        <h2>保存と復元</h2>
       </div>
-      <p class="backup-text">大切な記録がなくならないように、定期的なバックアップをお願いします。</p>
+      <p class="backup-text">記録を保存したり復元できます。大切な記録がなくならないように、定期的に保存してください。</p>
       <div class="backup-actions">
-        <button type="button" class="secondary-button" id="exportButton">JSONでエクスポート</button>
+        <button type="button" class="secondary-button" id="exportButton">保存</button>
         <label class="file-label" for="importFile">
-          JSONをインポート
+          復元
           <input type="file" id="importFile" accept="application/json,.json">
         </label>
       </div>
@@ -828,7 +828,7 @@
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setStatus(backupStatus, "エクスポートしました");
+      setStatus(backupStatus, "データを保存しました");
     });
 
     importFile.addEventListener("change", () => {
@@ -837,7 +837,7 @@
         return;
       }
 
-      const ok = window.confirm("JSONファイルをインポートしますか？同じ日付の記録はインポートした内容で上書きされます。");
+      const ok = window.confirm("保存した記録を復元しますか？同じ日付の記録は復元した内容で上書きされます。");
       if (!ok) {
         importFile.value = "";
         return;
@@ -868,10 +868,10 @@
 
           saveRecords(Array.from(map.values()));
           renderRecords();
-          setStatus(backupStatus, `${normalized.length}件インポートしました`);
+          setStatus(backupStatus, `${normalized.length}件復元しました`);
         } catch (error) {
-          console.warn("インポートに失敗しました", error);
-          setStatus(backupStatus, "インポートに失敗しました");
+          console.warn("復元に失敗しました", error);
+          setStatus(backupStatus, "復元に失敗しました");
         } finally {
           importFile.value = "";
         }
