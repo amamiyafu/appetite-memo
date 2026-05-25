@@ -73,22 +73,39 @@
       overflow-x: hidden;
     }
 
-    .hero {
-      padding: 18px 4px 14px;
+    .app-header {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      padding: 20px 4px 18px;
+      text-align: center;
     }
 
-    h1 {
-      margin: 0 0 8px;
+    .title-area {
+      width: 100%;
+      max-width: 560px;
+      min-width: 0;
+      margin: 0 auto;
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .app-title {
+      margin: 0;
       font-size: clamp(28px, 8vw, 40px);
       line-height: 1.2;
       font-weight: 800;
       color: #3e3025;
     }
 
-    .lead {
-      margin: 0;
+    .subtitle {
+      width: 100%;
+      max-width: 34em;
+      margin: 0 auto;
       color: var(--muted);
       font-size: 15px;
+      text-align: center;
     }
 
     .card,
@@ -436,9 +453,11 @@
 </head>
 <body>
   <main class="app" id="app">
-    <header class="hero">
-      <h1>食欲メモ</h1>
-      <p class="lead">朝・昼・夜などの食欲を、4つの中から選んで記録できます。</p>
+    <header class="app-header">
+      <div class="title-area">
+        <h1 class="app-title">食欲メモ</h1>
+        <p class="subtitle">朝・昼・夜などの食欲を、4つの中から選んで記録できます。</p>
+      </div>
     </header>
 
     <section class="card" id="formCard" aria-label="食欲の記録フォーム">
