@@ -385,6 +385,7 @@
 
     .backup-card {
       margin-bottom: 0;
+      padding-bottom: 12px;
     }
 
     .backup-text {
@@ -432,9 +433,50 @@
       pointer-events: none;
     }
 
+    .backup-actions .backup-button {
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-width: 0;
+      min-height: 48px;
+      padding: 10px 12px;
+      border-radius: 15px;
+      border: 1px solid #dfc6a7;
+      background: #fff8ec;
+      color: var(--accent-deep);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .backup-actions button.backup-button,
+    .backup-actions label.backup-button {
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+      height: auto;
+      margin: 0;
+    }
+
+    .backup-file-label input {
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
     .backup-status {
-      min-height: 22px;
-      margin: 10px 0 0;
+      min-height: 16px;
+      margin: 8px 0 0;
       color: var(--green);
       font-size: 14px;
       font-weight: 800;
@@ -449,6 +491,7 @@
       .card,
       .backup-card {
         padding: 20px;
+        padding-bottom: 16px;
       }
 
       .choice-grid,
@@ -533,15 +576,15 @@
       </form>
     </section>
 
-    <section class="backup-card" aria-label="保存と復元">
+    <section class="backup-card" aria-label="バックアップ">
       <div class="backup-head">
-        <h2>保存と復元</h2>
+        <h2>バックアップ</h2>
       </div>
       <p class="backup-text">記録を保存したり復元できます。
         大切な記録がなくならないように、定期的に保存をお願いします。</p>
       <div class="backup-actions">
-        <button type="button" class="secondary-button" id="exportButton">保存</button>
-        <label class="file-label" for="importFile">
+        <button type="button" class="backup-button" id="exportButton">保存</button>
+        <label class="backup-button backup-file-label" for="importFile">
           復元
           <input type="file" id="importFile" accept="application/json,.json">
         </label>
