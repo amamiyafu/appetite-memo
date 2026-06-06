@@ -311,6 +311,63 @@
       font-weight: 700;
       white-space: nowrap;
     }
+    .record-filter {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin: 0 0 12px;
+    }
+
+    .filter-label {
+      display: block;
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .month-select {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      display: block;
+      font-size: 16px;
+      min-height: 48px;
+      padding: 11px 40px 11px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      background: #fffdfa;
+      outline: none;
+    }
+
+    .month-select:focus {
+      border-color: #d9965f;
+      box-shadow: 0 0 0 4px rgba(217, 138, 74, 0.16);
+    }
+
+    .month-select-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .month-select-wrap::after {
+      content: "";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 9px;
+      height: 9px;
+      border-right: 2px solid #a77a55;
+      border-bottom: 2px solid #a77a55;
+      pointer-events: none;
+      transform: translateY(-65%) rotate(45deg);
+    }
 
     .empty {
       margin: 0;
@@ -597,6 +654,12 @@
         <h2>記録一覧</h2>
         <span class="count" id="recordCount">0件</span>
       </div>
+      <div class="record-filter">
+        <label class="filter-label" for="monthFilter">表示する月</label>
+        <div class="month-select-wrap">
+          <select class="month-select" id="monthFilter"></select>
+        </div>
+      </div>
       <div class="record-list" id="recordList"></div>
     </section>
   </main>
@@ -632,6 +695,7 @@
     const importFile = document.getElementById("importFile");
     const backupStatus = document.getElementById("backupStatus");
     let editingDate = "";
+    let activeMonth = currentMonthString();
 
     function todayString() {
       const now = new Date();
@@ -690,6 +754,48 @@
       return [...records].sort((a, b) => b.date.localeCompare(a.date));
     }
 
+
+    function getRecordMonth(record) {
+      return record.date.slice(0, 7);
+    }
+
+    function formatMonthLabel(monthValue) {
+      const parts = monthValue.split("-");
+      return `${parts[0]}年${Number(parts[1])}月`;
+    }
+
+    function getMonthOptions(records) {
+      const months = new Set(records.map(getRecordMonth));
+      months.add(currentMonthString());
+      if (activeMonth && activeMonth !== "all") {
+        months.add(activeMonth);
+      }
+      return Array.from(months).sort((a, b) => b.localeCompare(a));
+    }
+
+    function syncMonthFilter(records) {
+      const months = getMonthOptions(records);
+      const currentMonth = currentMonthString();
+      monthFilter.innerHTML = "";
+      months.forEach((monthValue) => {
+        const option = document.createElement("option");
+        option.value = monthValue;
+        option.textContent = monthValue === currentMonth ? `今月（${formatMonthLabel(monthValue)}）` : formatMonthLabel(monthValue);
+        monthFilter.appendChild(option);
+      });
+      const allOption = document.createElement("option");
+      allOption.value = "all";
+      allOption.textContent = "すべて表示";
+      monthFilter.appendChild(allOption);
+      monthFilter.value = activeMonth;
+    }
+
+    function filterRecordsByMonth(records) {
+      if (activeMonth === "all") {
+        return records;
+      }
+      return records.filter((record) => getRecordMonth(record) === activeMonth);
+    }
     function getDisplayValue(value) {
       return value || "未記録";
     }
@@ -741,14 +847,16 @@
     }
 
     function renderRecords() {
-      const records = sortedRecords(loadRecords());
+      const allRecords = sortedRecords(loadRecords());
+      syncMonthFilter(allRecords);
+      const records = filterRecordsByMonth(allRecords);
       recordCount.textContent = `${records.length}件`;
       recordList.innerHTML = "";
 
       if (records.length === 0) {
         const empty = document.createElement("p");
         empty.className = "empty";
-        empty.textContent = "まだ記録はありません。";
+        empty.textContent = activeMonth === "all" ? "まだ記録はありません。" : "この月の記録はありません。";
         recordList.appendChild(empty);
         return;
       }
@@ -857,6 +965,11 @@
       });
     });
 
+
+    monthFilter.addEventListener("change", () => {
+      activeMonth = monthFilter.value;
+      renderRecords();
+    });
     cancelEditButton.addEventListener("click", () => {
       resetForm();
       setStatus(saveStatus, "");
