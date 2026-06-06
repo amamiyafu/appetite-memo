@@ -311,62 +311,47 @@
       font-weight: 700;
       white-space: nowrap;
     }
-    .record-filter {
+    .month-nav {
       width: 100%;
       max-width: 100%;
       min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(76px, 1fr) minmax(96px, 1.2fr) minmax(76px, 1fr);
+      align-items: center;
+      gap: 8px;
       margin: 0 0 12px;
     }
 
-    .filter-label {
-      display: block;
-      margin: 0 0 8px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .month-select {
+    .month-nav-button {
       -webkit-appearance: none;
       appearance: none;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
       box-sizing: border-box;
-      display: block;
-      font-size: 16px;
-      min-height: 48px;
-      padding: 11px 40px 11px 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      color: var(--text);
-      background: #fffdfa;
-      outline: none;
-    }
-
-    .month-select:focus {
-      border-color: #d9965f;
-      box-shadow: 0 0 0 4px rgba(217, 138, 74, 0.16);
-    }
-
-    .month-select-wrap {
-      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
-      max-width: 100%;
       min-width: 0;
+      min-height: 44px;
+      padding: 9px 8px;
+      border-radius: 14px;
+      border: 1px solid #dfc6a7;
+      background: #fff8ec;
+      color: var(--accent-deep);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      white-space: nowrap;
     }
 
-    .month-select-wrap::after {
-      content: "";
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      width: 9px;
-      height: 9px;
-      border-right: 2px solid #a77a55;
-      border-bottom: 2px solid #a77a55;
-      pointer-events: none;
-      transform: translateY(-65%) rotate(45deg);
+    .current-month {
+      min-width: 0;
+      color: #43352a;
+      font-size: clamp(17px, 5vw, 20px);
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: center;
+      white-space: nowrap;
     }
 
     .empty {
@@ -654,11 +639,10 @@
         <h2>記録一覧</h2>
         <span class="count" id="recordCount">0件</span>
       </div>
-      <div class="record-filter">
-        <label class="filter-label" for="monthFilter">表示する月</label>
-        <div class="month-select-wrap">
-          <select class="month-select" id="monthFilter"></select>
-        </div>
+      <div class="month-nav" aria-label="表示する月を切り替える">
+        <button type="button" class="month-nav-button" id="prevMonthButton">前の月</button>
+        <div class="current-month" id="currentMonthLabel" aria-live="polite"></div>
+        <button type="button" class="month-nav-button" id="nextMonthButton">次の月</button>
       </div>
       <div class="record-list" id="recordList"></div>
     </section>
@@ -691,6 +675,9 @@
     const saveStatus = document.getElementById("saveStatus");
     const recordList = document.getElementById("recordList");
     const recordCount = document.getElementById("recordCount");
+    const prevMonthButton = document.getElementById("prevMonthButton");
+    const nextMonthButton = document.getElementById("nextMonthButton");
+    const currentMonthLabel = document.getElementById("currentMonthLabel");
     const exportButton = document.getElementById("exportButton");
     const importFile = document.getElementById("importFile");
     const backupStatus = document.getElementById("backupStatus");
@@ -703,6 +690,10 @@
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const day = String(now.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
+    }
+
+    function currentMonthString() {
+      return todayString().slice(0, 7);
     }
 
     function loadRecords() {
@@ -764,36 +755,19 @@
       return `${parts[0]}年${Number(parts[1])}月`;
     }
 
-    function getMonthOptions(records) {
-      const months = new Set(records.map(getRecordMonth));
-      months.add(currentMonthString());
-      if (activeMonth && activeMonth !== "all") {
-        months.add(activeMonth);
-      }
-      return Array.from(months).sort((a, b) => b.localeCompare(a));
+    function addMonthsToMonth(monthValue, amount) {
+      const parts = monthValue.split("-").map(Number);
+      const date = new Date(parts[0], parts[1] - 1 + amount, 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      return `${year}-${month}`;
     }
 
-    function syncMonthFilter(records) {
-      const months = getMonthOptions(records);
-      const currentMonth = currentMonthString();
-      monthFilter.innerHTML = "";
-      months.forEach((monthValue) => {
-        const option = document.createElement("option");
-        option.value = monthValue;
-        option.textContent = monthValue === currentMonth ? `今月（${formatMonthLabel(monthValue)}）` : formatMonthLabel(monthValue);
-        monthFilter.appendChild(option);
-      });
-      const allOption = document.createElement("option");
-      allOption.value = "all";
-      allOption.textContent = "すべて表示";
-      monthFilter.appendChild(allOption);
-      monthFilter.value = activeMonth;
+    function updateMonthNav() {
+      currentMonthLabel.textContent = formatMonthLabel(activeMonth);
     }
 
     function filterRecordsByMonth(records) {
-      if (activeMonth === "all") {
-        return records;
-      }
       return records.filter((record) => getRecordMonth(record) === activeMonth);
     }
     function getDisplayValue(value) {
@@ -848,7 +822,7 @@
 
     function renderRecords() {
       const allRecords = sortedRecords(loadRecords());
-      syncMonthFilter(allRecords);
+      updateMonthNav();
       const records = filterRecordsByMonth(allRecords);
       recordCount.textContent = `${records.length}件`;
       recordList.innerHTML = "";
@@ -856,7 +830,7 @@
       if (records.length === 0) {
         const empty = document.createElement("p");
         empty.className = "empty";
-        empty.textContent = activeMonth === "all" ? "まだ記録はありません。" : "この月の記録はありません。";
+        empty.textContent = "この月の記録はありません。";
         recordList.appendChild(empty);
         return;
       }
@@ -964,10 +938,13 @@
         });
       });
     });
+    prevMonthButton.addEventListener("click", () => {
+      activeMonth = addMonthsToMonth(activeMonth, -1);
+      renderRecords();
+    });
 
-
-    monthFilter.addEventListener("change", () => {
-      activeMonth = monthFilter.value;
+    nextMonthButton.addEventListener("click", () => {
+      activeMonth = addMonthsToMonth(activeMonth, 1);
       renderRecords();
     });
     cancelEditButton.addEventListener("click", () => {
